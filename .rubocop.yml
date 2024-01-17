@@ -1,0 +1,171 @@
+require:
+  - rubocop-packaging
+  - rubocop-performance
+  - rubocop-rails
+  - rubocop-rspec
+
+Rails:
+  Enabled: true
+AllCops:
+  Exclude:
+    - lib/**/templates/*
+    - vendor/**/*
+  NewCops: enable
+  SuggestExtensions: false
+  TargetRubyVersion: 2.0
+
+#################
+# [i] Overrides #
+#################
+
+Style/CollectionMethods:
+  Enabled: true
+  # Mapping from undesired method to desired_method
+  # e.g. to use `detect` over `find`:
+  #
+  # CollectionMethods:
+  #   PreferredMethods:
+  #     find: detect
+  PreferredMethods:
+    reduce: 'inject'
+    find: 'detect'
+    each_with_index: 'each.with_index'
+
+Style/EmptyMethod:
+  EnforcedStyle: expanded
+
+# Align ends correctly.
+Layout/EndAlignment:
+  EnforcedStyleAlignWith: variable
+
+Layout/LineLength:
+  Max: 120
+
+Style/SignalException:
+  EnforcedStyle: only_raise
+
+Layout/SpaceInsideBlockBraces:
+  SpaceBeforeBlockParameters: true
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: space
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+#################
+# Disabled cops #
+#################
+# We actually still work with ruby 2.0 but this setting only supports 2.4+
+# We aren't going to drop old versions just to make rubocop happy.
+Gemspec/RequiredRubyVersion:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/EachWithObject:
+  Enabled: false
+
+Style/FormatString:
+  Enabled: false
+
+Style/Lambda:
+  Enabled: false
+
+Style/MultipleComparison:
+  Enabled: false
+
+Style/NegatedIf:
+  Enabled: false
+
+Style/PercentLiteralDelimiters:
+  PreferredDelimiters:
+    "%w": "[]"
+    "%W": "[]"
+    "%i": "[]"
+    "%I": "[]"
+
+Style/Semicolon:
+  Enabled: false
+
+Style/SingleLineBlockParams:
+  Enabled: false
+
+Style/WordArray:
+  Enabled: false
+
+# HABTM still has a place.
+# http://collectiveidea.com/blog/archives/2014/08/11/has_and_belongs_to_many-isnt-dead/
+Rails/HasAndBelongsToMany:
+  Enabled: false
+
+Rails/RakeEnvironment:
+  Enabled: false
+
+# enforces using the class name in a describe block (e.g. `describe TestedClass do`)
+RSpec/DescribeClass:
+  Enabled: false
+
+# enforces using the described_class variablea (`described_class` instead of MyClass)
+RSpec/DescribedClass:
+  Enabled: false
+
+# RSpec examples are ok if they're long.
+# Explicitness is better than cleverness in tests.
+RSpec/ExampleLength:
+  Enabled: false
+
+# enforces using either `expect` or `allow` for stubs.  Since they do differnet things,
+# we should let the developer decide which to use
+RSpec/MessageExpectation:
+  Enabled: false
+
+# enforces having only one `expect` per test
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+
+# enforces rules about how many nested `describe` blocks are allowed
+RSpec/NestedGroups:
+  Enabled: false
+
+# enforces rules about using `it` or `describe` block methods instead of `feature` or `scenario`
+RSpec/Capybara/FeatureMethods:
+  Enabled: false
+
+RSpec/SpecFilePathFormat:
+  Enabled: false
+
+###################
+# Local overrides #
+###################
+
+Rails/ApplicationRecord:
+  Enabled: false
+
+Rails/SkipsModelValidations:
+  Enabled: false
+
+Security/YAMLLoad:
+  Enabled: false
+
+Style/FormatStringToken:
+  Enabled: false
+
+Style/NumericPredicate:
+  Enabled: false

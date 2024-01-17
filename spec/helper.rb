@@ -1,53 +1,90 @@
-require 'simplecov'
-require 'coveralls'
+# frozen_string_literal: true
 
-SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
+require "simplecov"
+require "simplecov-lcov"
+
+SimpleCov::Formatter::LcovFormatter.config do |c|
+  c.report_with_single_file = true
+  c.single_report_path = "coverage/lcov.info"
+end
+SimpleCov.formatters = SimpleCov::Formatter::MultiFormatter.new(
+  [
     SimpleCov::Formatter::HTMLFormatter,
-      Coveralls::SimpleCov::Formatter
-]
-SimpleCov.start
+    SimpleCov::Formatter::LcovFormatter
+  ]
+)
 
-require 'logger'
-require 'rspec'
+SimpleCov.start do
+  add_filter "/spec/"
+end
+
+require "logger"
+require "rspec"
 
 begin
-  require 'protected_attributes'
-rescue LoadError
+  require "protected_attributes"
+rescue LoadError # rubocop:disable Lint/SuppressedException
 end
-require 'delayed_job_active_record'
-require 'delayed/backend/shared_spec'
+require "delayed_job_active_record"
+require "delayed/backend/shared_spec"
 
-Delayed::Worker.logger = Logger.new('/tmp/dj.log')
-ENV['RAILS_ENV'] = 'test'
+Delayed::Worker.logger = Logger.new("/tmp/dj.log")
+ENV["RAILS_ENV"] = "test"
 
-db_adapter, gemfile = ENV["ADAPTER"], ENV["BUNDLE_GEMFILE"]
-db_adapter ||= gemfile && gemfile[%r(gemfiles/(.*?)/)] && $1
-db_adapter ||= 'sqlite3'
+db_adapter = ENV.fetch("ADAPTER", nil)
+gemfile = ENV.fetch("BUNDLE_GEMFILE", nil)
+db_adapter ||= gemfile && gemfile[%r{gemfiles/(.*?)/}] && $1 # rubocop:disable Style/PerlBackrefs
+db_adapter ||= "sqlite3"
 
-config = YAML.load(File.read('spec/database.yml'))
+config = YAML.load_file("spec/database.yml")
 ActiveRecord::Base.establish_connection config[db_adapter]
 ActiveRecord::Base.logger = Delayed::Worker.logger
 ActiveRecord::Migration.verbose = false
 
-ActiveRecord::Schema.define do
-  create_table :delayed_jobs, :force => true do |table|
-    table.integer  :priority, :default => 0
-    table.integer  :attempts, :default => 0
-    table.text     :handler
-    table.text     :last_error
-    table.datetime :run_at
-    table.datetime :locked_at
-    table.datetime :failed_at
-    table.string   :locked_by
-    table.string   :queue
-    table.timestamps
+# MySQL 5.7 no longer supports null default values for the primary key
+# Override the default primary key type in Rails <= 4.0
+# https://stackoverflow.com/a/34555109
+if db_adapter == "mysql2"
+  types = if defined?(ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter)
+    # ActiveRecord 3.2+
+    ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter::NATIVE_DATABASE_TYPES
+  else
+    # ActiveRecord < 3.2
+    ActiveRecord::ConnectionAdapters::Mysql2Adapter::NATIVE_DATABASE_TYPES
+  end
+  types[:primary_key] = types[:primary_key].sub(" DEFAULT NULL", "")
+end
+
+migration_template = File.open("lib/generators/delayed_job/templates/migration.rb")
+
+# need to eval the template with the migration_version intact
+migration_context =
+  Class.new do
+    def my_binding
+      binding
+    end
+
+    private
+
+    def migration_version
+      "[#{ActiveRecord::VERSION::MAJOR}.#{ActiveRecord::VERSION::MINOR}]" if ActiveRecord::VERSION::MAJOR >= 5
+    end
   end
 
-  add_index :delayed_jobs, [:priority, :run_at], :name => 'delayed_jobs_priority'
+migration_ruby = ERB.new(migration_template.read).result(migration_context.new.my_binding)
+eval(migration_ruby) # rubocop:disable Security/Eval
 
-  create_table :stories, :primary_key => :story_id, :force => true do |table|
+ActiveRecord::Schema.define do
+  if table_exists?(:delayed_jobs)
+    # `if_exists: true` was only added in Rails 5
+    drop_table :delayed_jobs
+  end
+
+  CreateDelayedJobs.up
+
+  create_table :stories, primary_key: :story_id, force: true do |table|
     table.string :text
-    table.boolean :scoped, :default => true
+    table.boolean :scoped, default: true
   end
 end
 
@@ -58,9 +95,14 @@ class Story < ActiveRecord::Base
   else
     self.primary_key = :story_id
   end
-  def tell; text; end
-  def whatever(n, _); tell*n; end
-  default_scope { where(:scoped => true) }
+  def tell
+    text
+  end
+
+  def whatever(number)
+    tell * number
+  end
+  default_scope { where(scoped: true) }
 
   handle_asynchronously :whatever
 end
