@@ -16,4 +16,5 @@ Gem::Specification.new do |spec|
   spec.summary        = 'ActiveRecord backend for DelayedJob'
   spec.test_files     = Dir.glob("spec/**/*")
   spec.version        = '4.1.0'
+  spec.platform       = Gem::Platform::RUBY
 end
