@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 Gem::Specification.new do |spec|
-  spec.add_dependency "activerecord", [">= 3.0", "< 8.0"]
+  spec.add_dependency "activerecord", [">= 3.0", "< 8.2"]
   spec.add_dependency "delayed_job",  [">= 3.0", "< 5"]
   spec.authors        = ["David Genord II", "Brian Ryckbost", "Matt Griffin", "Erik Michaels-Ober"]
   spec.description    = "ActiveRecord backend for Delayed::Job, originally authored by Tobias Lütke"
@@ -14,5 +14,5 @@ Gem::Specification.new do |spec|
   spec.name           = "delayed_job_active_record"
   spec.require_paths  = ["lib"]
   spec.summary        = "ActiveRecord backend for DelayedJob"
-  spec.version        = "4.1.8"
+  spec.version        = "4.1.9"
 end
