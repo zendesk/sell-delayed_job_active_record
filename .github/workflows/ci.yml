@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  specs:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version: ['3.3', '3.4', '4.0']
+        gemfile:
+          - gemfiles/mysql/3-0.gemfile
+          - gemfiles/mysql/3-1.gemfile
+          - gemfiles/mysql/3-2.gemfile
+          - gemfiles/mysql/4-0.gemfile
+          - gemfiles/postgresql/3-0.gemfile
+          - gemfiles/postgresql/3-1.gemfile
+          - gemfiles/postgresql/3-2.gemfile
+          - gemfiles/postgresql/4-0.gemfile
+          - gemfiles/sqlite3/3-0.gemfile
+          - gemfiles/sqlite3/3-1.gemfile
+          - gemfiles/sqlite3/3-2.gemfile
+          - gemfiles/sqlite3/4-0.gemfile
+          - gemfiles/sqlite3/4-0-protected_attributes.gemfile
+    env:
+      BUNDLE_GEMFILE: ${{ matrix.gemfile }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+      - name: Run specs
+        run: bundle exec rake spec
+
+  specs_successful:
+    name: Specs passing?
+    needs: specs
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if ${{ needs.specs.result == 'success' }}
+          then
+            echo "All specs pass"
+          else
+            echo "Some specs failed"
+            false
+          fi

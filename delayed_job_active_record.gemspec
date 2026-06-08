@@ -1,8 +1,9 @@
 # coding: utf-8
 
 Gem::Specification.new do |spec|
-  spec.add_dependency   'activerecord', ['>= 3.0', '< 8.1']
+  spec.add_dependency   'activerecord', ['>= 7.2']
   spec.add_dependency   'delayed_job',  ['>= 3.0', '< 4.2']
+  spec.required_ruby_version = '>= 3.3'
   spec.authors        = ["Brian Ryckbost", "Matt Griffin", "Erik Michaels-Ober"]
   spec.description    = 'ActiveRecord backend for Delayed::Job, originally authored by Tobias Lütke'
   spec.email          = ['bryckbost@gmail.com', 'matt@griffinonline.org', 'sferik@gmail.com']
